@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Glasses Monitor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Safety Glasses Monitor</h1>
+            <p class="subtitle">FIRST Workspace Safety Compliance System</p>
+        </header>
+
+        <div class="main-content">
+            <div class="camera-section">
+                <div class="video-container">
+                    <video id="video" autoplay playsinline></video>
+                    <div class="status-overlay" id="statusOverlay">
+                        <div class="status-indicator" id="statusIndicator">
+                            <span class="status-text">Ready</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="startBtn" class="btn btn-primary">Start Monitoring</button>
+                    <button id="stopBtn" class="btn btn-secondary" disabled>Stop Monitoring</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>Settings</h2>
+                <div class="setting-item">
+                    <label for="intervalInput">Check Interval (seconds):</label>
+                    <input type="number" id="intervalInput" min="5" max="60" value="15">
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="soundEnabled" checked>
+                        Enable Audio Alerts
+                    </label>
+                </div>
+            </div>
+
+            <div class="status-section">
+                <h2>Status</h2>
+                <div class="status-info">
+                    <div class="info-item">
+                        <span class="info-label">Last Check:</span>
+                        <span id="lastCheck">Never</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Status:</span>
+                        <span id="currentStatus">Not Monitoring</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Violations Today:</span>
+                        <span id="violationCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert-banner" id="alertBanner">
+            <div class="alert-content">
+                <span class="alert-icon">⚠️</span>
+                <span class="alert-text">SAFETY VIOLATION: Safety glasses not detected!</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
