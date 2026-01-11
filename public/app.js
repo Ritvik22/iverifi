@@ -239,7 +239,7 @@ function stopMonitoring() {
     stopBtn.disabled = true;
     intervalInput.disabled = false;
     currentStatusEl.textContent = 'Not Monitoring';
-    currentStatusEl.style.color = '#6b7280';
+    currentStatusEl.style.color = '#9ca3af';
 
     if (checkInterval) {
         clearInterval(checkInterval);
