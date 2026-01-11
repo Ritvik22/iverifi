@@ -22,11 +22,13 @@ const openai = openaiApiKey ? new OpenAI({
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Serve static files from public directory (for local development)
-// On Vercel, static files are served directly by the platform
-if (require.main === module) {
-  app.use(express.static('public'));
-}
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve index.html for root path (needed for Vercel SPA routing)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
