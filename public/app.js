@@ -38,46 +38,46 @@ function playAlertSound() {
         const duration = 0.3; // Duration of each tone
         const pause = 0.1; // Pause between tones
         const cycles = 3; // Number of alarm cycles
-        
+
         let currentTime = audioContext.currentTime;
-        
+
         for (let cycle = 0; cycle < cycles; cycle++) {
             // First tone (higher frequency)
             const osc1 = audioContext.createOscillator();
             const gain1 = audioContext.createGain();
-            
+
             osc1.connect(gain1);
             gain1.connect(audioContext.destination);
-            
+
             osc1.frequency.value = 1000;
             osc1.type = 'sine';
-            
+
             gain1.gain.setValueAtTime(0, currentTime);
             gain1.gain.linearRampToValueAtTime(0.4, currentTime + 0.05);
             gain1.gain.linearRampToValueAtTime(0, currentTime + duration);
-            
+
             osc1.start(currentTime);
             osc1.stop(currentTime + duration);
-            
+
             currentTime += duration + pause;
-            
+
             // Second tone (lower frequency)
             const osc2 = audioContext.createOscillator();
             const gain2 = audioContext.createGain();
-            
+
             osc2.connect(gain2);
             gain2.connect(audioContext.destination);
-            
+
             osc2.frequency.value = 800;
             osc2.type = 'sine';
-            
+
             gain2.gain.setValueAtTime(0, currentTime);
             gain2.gain.linearRampToValueAtTime(0.4, currentTime + 0.05);
             gain2.gain.linearRampToValueAtTime(0, currentTime + duration);
-            
+
             osc2.start(currentTime);
             osc2.stop(currentTime + duration);
-            
+
             currentTime += duration + pause * 2;
         }
     } catch (e) {
@@ -113,14 +113,28 @@ function stopCamera() {
     }
 }
 
-// Capture frame from video
+// Capture frame from video and resize
 function captureFrame() {
     const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+
+    // Calculate new dimensions (max width 800px)
+    const MAX_WIDTH = 800;
+    let width = video.videoWidth;
+    let height = video.videoHeight;
+
+    if (width > MAX_WIDTH) {
+        height = Math.round(height * (MAX_WIDTH / width));
+        width = MAX_WIDTH;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-    return canvas.toDataURL('image/jpeg', 0.8);
+    ctx.drawImage(video, 0, 0, width, height);
+
+    // Use lower quality for faster transmission (0.7)
+    return canvas.toDataURL('image/jpeg', 0.7);
 }
 
 // Update status indicator
@@ -134,7 +148,7 @@ function updateStatus(status, text) {
 function showAlert() {
     alertBanner.classList.add('show');
     playAlertSound();
-    
+
     // Hide alert after 5 seconds
     setTimeout(() => {
         alertBanner.classList.remove('show');
