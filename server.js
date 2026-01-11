@@ -8,14 +8,25 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Note: On Vercel, environment variables are automatically available
+const openaiApiKey = process.env.OPENAI_API_KEY;
+if (!openaiApiKey) {
+  console.warn('WARNING: OPENAI_API_KEY not found in environment variables');
+}
+
+const openai = openaiApiKey ? new OpenAI({
+  apiKey: openaiApiKey,
+}) : null;
 
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static('public'));
+
+// Serve static files from public directory (for local development)
+// On Vercel, static files are served directly by the platform
+if (require.main === module) {
+  app.use(express.static('public'));
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -24,6 +35,9 @@ app.get('/api/health', (req, res) => {
 
 // Safety glasses detection endpoint
 app.post('/api/check-safety-glasses', async (req, res) => {
+  const startTime = Date.now();
+  console.log('Received safety glass check request');
+
   try {
     const { image } = req.body;
 
@@ -31,11 +45,16 @@ app.post('/api/check-safety-glasses', async (req, res) => {
       return res.status(400).json({ error: 'No image provided' });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    if (!openai || !openaiApiKey) {
+      console.error('OpenAI API key missing');
+      return res.status(500).json({ 
+        error: 'OpenAI API key not configured',
+        message: 'Please set OPENAI_API_KEY in your Vercel environment variables'
+      });
     }
 
     // Call OpenAI Vision API
+    console.log('Sending request to OpenAI...');
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -58,6 +77,9 @@ app.post('/api/check-safety-glasses', async (req, res) => {
       max_tokens: 10,
     });
 
+    const duration = Date.now() - startTime;
+    console.log(`OpenAI response received in ${duration}ms`);
+
     const result = response.choices[0].message.content.trim().toUpperCase();
     const isWearingGlasses = result === 'YES';
 
@@ -66,9 +88,11 @@ app.post('/api/check-safety-glasses', async (req, res) => {
       wearingGlasses: isWearingGlasses,
       rawResponse: result,
       timestamp: new Date().toISOString(),
+      duration: duration
     });
   } catch (error) {
-    console.error('Error checking safety glasses:', error);
+    const duration = Date.now() - startTime;
+    console.error(`Error checking safety glasses after ${duration}ms:`, error);
     res.status(500).json({
       error: 'Failed to check safety glasses',
       message: error.message,
@@ -76,9 +100,24 @@ app.post('/api/check-safety-glasses', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Safety Glasses Monitor server running on http://localhost:${PORT}`);
-  console.log('Make sure to set OPENAI_API_KEY in your .env file');
+// Error handling middleware (should be last)
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
+  });
 });
+
+// Export the Express app for Vercel serverless functions
+// @vercel/node will automatically wrap this as a serverless function
+module.exports = app;
+
+// Only start the server if running locally (not on Vercel)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Safety Glasses Monitor server running on http://localhost:${PORT}`);
+    console.log('Make sure to set OPENAI_API_KEY in your .env file');
+  });
+}
 
